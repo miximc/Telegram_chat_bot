@@ -28,7 +28,7 @@ def date_now(message):
     if user_text.lower() == 'время':
         bot.send_message(
             message.chat.id,
-            f'Дата: {tooday_datetime.date()}\nВремя: {tooday_datetime.time()}')
+            f'Сегодня:\n {tooday_datetime.now()}')
 
     elif user_text.lower() == 'сделано':
         bot.send_message(
