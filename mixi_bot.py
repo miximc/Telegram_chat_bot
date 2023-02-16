@@ -14,6 +14,10 @@ tooday = datetime.date
 
 bot = telebot.TeleBot(token)
 
+def qwe(ready):
+    a = "\n".join(ready)
+    return a    
+
 @bot.message_handler(commands=['start'])
 def start(message):
     print('I\'m you\'r new bot')
@@ -45,9 +49,7 @@ def date_now(message):
             message.chat.id,
             'Я не знаю ответа на ваш вопрос! :('
         )
-def qwe(ready):
-    a = "\n".join(ready)
-    return a       
+   
        
 
 bot.polling(none_stop=True)
