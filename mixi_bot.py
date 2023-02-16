@@ -2,14 +2,15 @@ from secret import token
 import telebot 
 from datetime import datetime
 
+
 tooday_datetime = datetime.now()
 ready_list = ['Покушать', 'Поспать', 'Полежать']
 
 not_ready_list = ['Поработать','Поучиться','Посмотреть кино']
 
-my_command = 'Мои команды:\n "/время" - дата и время суток \n "/сделано" - выполненные дела\n "/остаток" - не выполненные дела'
+my_command = 'Я умею:\n1. Показывать время - "время" \n2. Показывать выполненные дела - "сделано"\n3. Показывать не выполненные дела- "остаток"'
 
-tooday  = datetime.date
+tooday = datetime.date
 
 bot = telebot.TeleBot(token)
 
@@ -18,37 +19,35 @@ def start(message):
     print('I\'m you\'r new bot')
     bot.send_message(
         message.chat.id,
-        f'Приветствую! \n {my_command}' ,
-        parse_mode='html'
+        f'Приветствую! \n {my_command}'
     )
 
-@bot.message_handler(commands=['время'])
+@bot.message_handler(content_types=['text'])
 def date_now(message):
-    bot.send_message(
-        message.chat.id,
-        f'Дата: {tooday_datetime.date()}\nВремя: {tooday_datetime.hour}:{tooday_datetime.minute}')
+    user_text = message.text
+    if user_text.lower() == 'время':
+        bot.send_message(
+            message.chat.id,
+            f'Дата: {tooday_datetime.date()}\nВремя: {tooday_datetime.time()}')
 
+    elif user_text.lower() == 'сделано':
+        bot.send_message(
+            message.chat.id,
+            f'Вы сделали следующие дела:\n{qwe(ready_list)}')
 
-@bot.message_handler(commands=['сделано'])
-def ready(message):
-    print(*ready_list)
-    bot.send_message(
-        message.chat.id,
-        f'Вы сделали следующие дела:\n{qwe(ready_list)}'
-    )
+    elif user_text.lower() == 'остаток':
+        bot.send_message(
+            message.chat.id,
+            f'Вам остались следующие дела:\n{qwe(not_ready_list)}'
+        )
+    else:
+        bot.send_message(
+            message.chat.id,
+            'Я не знаю ответа на ваш вопрос! :('
+        )
 def qwe(ready):
     a = "\n".join(ready)
     return a       
-
-@bot.message_handler(commands=['остаток'])
-def ready(message):
-    print(*ready_list)
-    bot.send_message(
-        message.chat.id,
-        f'Вам остались следующие дела:\n{qwe(not_ready_list)}'
-    )
-def qwe(ready):
-    a = "\n".join(ready)
-    return a       
+       
 
 bot.polling(none_stop=True)
