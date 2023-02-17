@@ -1,4 +1,4 @@
-from secret import token
+from Telegram_chat_bot.secret import token
 import telebot 
 from datetime import datetime
 
