@@ -13,10 +13,9 @@ def qwe(ready):
     a = "\n".join(ready)
     return a   
 
-
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton('Время и дата')
     btn2 = types.KeyboardButton('Выполненные дела')
     btn3 = types.KeyboardButton('Список не выполненного')
@@ -51,13 +50,6 @@ def user_input(message):
     bot.send_message(message.chat.id,'Добавлено!')
     if a in not_ready_list:
         not_ready_list.remove(a)         
-    # else:
-    #     ready_list.append(str(message.list))
-    #     bot.send_message(
-    #         message.chat.id,
-    #         'ADDED'
-    #     )
-
 
 
 bot.polling(none_stop=True)
