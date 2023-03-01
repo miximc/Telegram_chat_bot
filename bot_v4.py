@@ -4,14 +4,11 @@ from secret import token
 from telebot import types
 from datetime import datetime
 #________________________________
-comm = sqlite3.connect('bd_bot.sqlite3')
+comm = sqlite3.connect('bd_bot_v2.sqlite3')
 cursor = comm.cursor()
-cursor.execute('''CREATE TABLE IF NOT EXISTS completed_tasks(
+cursor.execute('''CREATE TABLE IF NOT EXISTS tasks(
     id INTEGER,
-    name VARCHAR(50), PRIMARY KEY (id))''')
-cursor.execute('''CREATE TABLE IF NOT EXISTS uncompleted_tasks(
-     id INTEGER,
-     name VARCHAR(50), PRIMARY KEY (id))''')
+    name VARCHAR(50), status VARCHAR(20), PRIMARY KEY (id))''')
 cursor.close()
 all_content_types = ["text", "audio", "document", "photo", "sticker", "video", "video_note", "voice", "location", "contact",
                  "new_chat_members", "left_chat_member", "new_chat_title", "new_chat_photo", "delete_chat_photo",
@@ -55,18 +52,18 @@ def user(message):
     elif message.text == 'Выполненные дела':
         comm = sqlite3.connect('bd_bot.sqlite3')
         cursor = comm.cursor()
-        vals_completed = cursor.execute('SELECT name FROM completed_tasks')
+        vals_completed = cursor.execute('SELECT * FROM completed_tasks')
         comp_tasks = []
         for i in vals_completed:
-            a_str = "".join(i)
+            a_str = "".join(i[1])
             comp_tasks.append(a_str)
             print(i, type(i))
         bot.send_message(message.chat.id, make_str(comp_tasks))
         
     elif message.text == 'Не выполненные дела':
-        comm = sqlite3.connect('bd_bot.sqlite3')
+        comm = sqlite3.connect('bd_bot_v2.sqlite3')
         cursor = comm.cursor()
-        vals_uncompleted = cursor.execute('SELECT name FROM uncompleted_tasks')
+        vals_uncompleted = cursor.execute('SELECT name FROM tasks')
         uncomp_tasks = []
         print(vals_uncompleted)  
         for i in vals_uncompleted:
@@ -90,21 +87,27 @@ def user(message):
         f2.close()
 
 def user_input(message):
-    comm = sqlite3.connect('bd_bot.sqlite3')
+    comm = sqlite3.connect('bd_bot_v2.sqlite3')
     cursor = comm.cursor()
     a = message.text
-    request = f'INSERT INTO uncompleted_tasks(name) VALUES ("{a}")'
+    request = f'INSERT INTO tasks(name, status) VALUES ("{a}", "невыполненно")'
     cursor.execute(request)
     comm.commit()
     bot.send_message(message.chat.id,'Добавлено!')
 
 def user_input_2(message):
-    comm = sqlite3.connect('bd_bot.sqlite3')
+    comm = sqlite3.connect('bd_bot_v2.sqlite3')
     cursor = comm.cursor()
-    a = message.text
-    request = f'INSERT INTO completed_tasks(name) VALUES ("{a}")'
+    delo = message.text
+    q = cursor.execute('SELECT name FROM tasks')
+    w = []
+    for i in q:
+        e = ''.join(i)
+        w.append(e)
+    request = f'INSERT INTO tasks(name, status) VALUES ("{delo}","выполненно" )'
     cursor.execute(request)
     comm.commit()
+
     bot.send_message(message.chat.id,'Добавлено!')
 #_______________________________________________________________________________________
 
