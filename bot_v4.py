@@ -113,6 +113,7 @@ def user_input(message):
         request = f'INSERT INTO tasks(name, status) VALUES ("{a}", "не выполненно")'
         cursor.execute(request)
         comm.commit()
+        cursor.close()
         bot.send_message(message.chat.id,'Добавлено!')
     elif chek_dict[a] and chek_dict[a] == 'не выполненно':
         bot.send_message(message.chat.id,'Ваше дело уже есть в списке не выполненных дел')
@@ -126,6 +127,7 @@ def user_input_2(message):
         request = f'INSERT INTO tasks(name, status) VALUES ("{a}", "выполненно")'
         cursor.execute(request)
         comm.commit()
+        cursor.close()
         bot.send_message(message.chat.id,'Добавлено!')
     elif chek_dict[a] and chek_dict[a] == 'выполненно':
         bot.send_message(message.chat.id,'Вы уже это сделали сегодня!')
@@ -133,6 +135,7 @@ def user_input_2(message):
         request = f'INSERT INTO tasks(name, status) VALUES ("{a}", "выполненно")'
         cursor.execute(request)
         comm.commit()
+        cursor.close()
         bot.send_message(message.chat.id,'Добавлено!')
 #_______________________________________________________________________________________
 
