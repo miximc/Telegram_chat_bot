@@ -21,6 +21,18 @@ bot = telebot.TeleBot(token)
 def make_str(ready):
     a_str = "\n".join(ready)
     return a_str   
+def chek_name_status():
+    comm = sqlite3.connect('bd_bot_v2.sqlite3')
+    cursor = comm.cursor()  
+    vals_u = cursor.execute('SELECT name, status FROM tasks')
+    uncomp_t = {}  
+    for i in vals_u:
+        uncomp_t[i[0]] = i[1]
+    cursor.close()
+    return uncomp_t
+print(chek_name_status())
+
+        
 
 #___________________________________________________________________________
 @bot.message_handler(commands=['start'])
@@ -41,15 +53,15 @@ def user(message):
             f'Сегодня:\n{tooday_datetime.now()}')
     elif message.text == 'Дела':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        btn1 = types.KeyboardButton('Выполненные дела')
-        btn2 = types.KeyboardButton('Не выполненные дела')
-        btn3 = types.KeyboardButton('Добавить выполненное дело')
-        btn4 = types.KeyboardButton('Добавить дело')
-        btn5 = types.KeyboardButton('Удалить все дела')  
+        btn1 = types.KeyboardButton('Done tasks')
+        btn2 = types.KeyboardButton('Not done tasks')
+        btn3 = types.KeyboardButton('Add done task')
+        btn4 = types.KeyboardButton('New task')
+        btn5 = types.KeyboardButton('Delete all tasks')  
         markup.add(btn1, btn2, btn3, btn4, btn5)
         bot.send_message(message.chat.id, 'Выберете что вы хотите сделать:', reply_markup=markup) 
 
-    elif message.text == 'Выполненные дела':
+    elif message.text == 'Done tasks':
         comm = sqlite3.connect('bd_bot.sqlite3')
         cursor = comm.cursor()
         vals_completed = cursor.execute('SELECT * FROM completed_tasks')
@@ -57,10 +69,10 @@ def user(message):
         for i in vals_completed:
             a_str = "".join(i[1])
             comp_tasks.append(a_str)
-            print(i, type(i))
+            
         bot.send_message(message.chat.id, make_str(comp_tasks))
         
-    elif message.text == 'Не выполненные дела':
+    elif message.text == 'Not done tasks':
         comm = sqlite3.connect('bd_bot_v2.sqlite3')
         cursor = comm.cursor()
         vals_uncompleted = cursor.execute('SELECT name FROM tasks')
@@ -69,18 +81,18 @@ def user(message):
         for i in vals_uncompleted:
             b_str = "".join(i)
             uncomp_tasks.append(b_str)
-            print(i, type(i))
+            
             
         bot.send_message(message.chat.id, make_str(uncomp_tasks))
     
-    elif message.text == 'Добавить дело':
+    elif message.text == 'New task':
         mesg = bot.send_message(message.chat.id,'Введите ваше дело:')
         bot.register_next_step_handler(mesg, user_input)
 
-    elif message.text == 'Добавить выполненное дело':
+    elif message.text == 'Add done task':
         mesg = bot.send_message(message.chat.id,'Введите ваше дело:')
         bot.register_next_step_handler(mesg, user_input_2)
-    elif message.text == 'Удалить все дела':
+    elif message.text == 'Delete all tasks':
         f1 = open('my_list_2.txt', 'w')
         f1.close()
         f2 = open('my_list.txt', 'w')
@@ -90,7 +102,11 @@ def user_input(message):
     comm = sqlite3.connect('bd_bot_v2.sqlite3')
     cursor = comm.cursor()
     a = message.text
-    request = f'INSERT INTO tasks(name, status) VALUES ("{a}", "невыполненно")'
+    chek_dict = chek_name_status()
+    if chek_dict[a] and chek_dict[a] == 'невыполненно':
+        bot.send_message(message.chat.id,'Ваше дело уже есть в списке')
+    else:
+        request = f'INSERT INTO tasks(name, status) VALUES ("{a}", "невыполненно")'
     cursor.execute(request)
     comm.commit()
     bot.send_message(message.chat.id,'Добавлено!')
