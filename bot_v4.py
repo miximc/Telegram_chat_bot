@@ -15,8 +15,19 @@ all_content_types = ["text", "audio", "document", "photo", "sticker", "video", "
                  "group_chat_created", "supergroup_chat_created", "channel_chat_created", "migrate_to_chat_id",
                  "migrate_from_chat_id", "pinned_message"]
 
+def all_tasks_dict():
+    comm = sqlite3.connect('bd_bot_v2.sqlite3')
+    cursor = comm.cursor()
+    all_tasks = {}
+    vals_uncompleted = cursor.execute('SELECT name, status FROM tasks')
+    for i in vals_uncompleted:
+        all_tasks[i[0]] = i[1]
+    cursor.close()
+    return all_tasks   
+
 tooday_datetime = datetime.now()
 bot = telebot.TeleBot(token)
+
 #____________________________________________________________________________
 def make_str(ready):
     a_str = "\n".join(ready)
@@ -31,9 +42,6 @@ def chek_name_status():
         uncomp_t[i[0]] = i[1]
     cursor.close()
     return uncomp_t
-print(chek_name_status())
-
-    
 #___________________________________________________________________________
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -51,44 +59,33 @@ def user(message):
             f'Сегодня:\n{tooday_datetime.now()}')
     elif message.text == 'Дела':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        btn1 = types.KeyboardButton('Done tasks')   # СПИСОК ВЫПОЛНЕННЫХ ЗАДАЧ
-        btn2 = types.KeyboardButton('Not done tasks') # СПИСОК НЕ ВЫПОЛНЕННЫХ ЗАДАЧ
-        btn3 = types.KeyboardButton('Add done task') # ДОБАВИТЬ ВЫПОЛНЕННУЮ ЗАДАЧУ
-        btn4 = types.KeyboardButton('New task') # ДОБАВИТЬ ЗАДАЧУ
-        btn5 = types.KeyboardButton('Delete all tasks')  # УДАЛИТЬ ВСЕ ЗАДАЧИ
+        btn1 = types.KeyboardButton('Done tasks')                       # СПИСОК ВЫПОЛНЕННЫХ ЗАДАЧ
+        btn2 = types.KeyboardButton('Not done tasks')                   # СПИСОК НЕ ВЫПОЛНЕННЫХ ЗАДАЧ
+        btn3 = types.KeyboardButton('Add done task')                    # ДОБАВИТЬ ВЫПОЛНЕННУЮ ЗАДАЧУ
+        btn4 = types.KeyboardButton('New task')                         # ДОБАВИТЬ ЗАДАЧУ
+        btn5 = types.KeyboardButton('Delete all tasks - НЕ РАБОТАЕТ')   # УДАЛИТЬ ВСЕ ЗАДАЧИ
         markup.add(btn1, btn2, btn3, btn4, btn5)
         bot.send_message(message.chat.id, 'Выберете что вы хотите сделать:', reply_markup=markup) 
 #___________________________________________________________________________________________________
 #               ВЫПОЛНЕННЫЕ ЗАДАЧИ
     elif message.text == 'Done tasks':
-        comm = sqlite3.connect('bd_bot.sqlite3')
-        cursor = comm.cursor()
-        vals_completed = cursor.execute('SELECT * FROM completed_tasks')
-        comp_tasks = []
-        for i in vals_completed:
-            a_str = "".join(i[1])
-            comp_tasks.append(a_str)
-            
-        bot.send_message(message.chat.id, make_str(comp_tasks))
+        all_tasks = all_tasks_dict()
+        done_list = []    
+        for key in all_tasks.keys():
+            if all_tasks[key] == 'выполненно':
+                done_list.append(key)
+
+        bot.send_message(message.chat.id, make_str(done_list))
  #__________________________________________________________________________________________________       
  #              НЕ ВЫПОЛНЕННЫЕ ЗАДАЧИ   
     elif message.text == 'Not done tasks':
-        comm = sqlite3.connect('bd_bot_v2.sqlite3')
-        cursor = comm.cursor()
-        vals_uncompleted = cursor.execute('SELECT name, status FROM tasks')
-        all_tasks = {}
+        all_tasks = all_tasks_dict() 
+        not_done_list = []  
+        for key in all_tasks.keys():
+            if all_tasks[key] == 'не выполненно':
+                not_done_list.append(key)
 
-        #print(vals_uncompleted)  
-        for i in vals_uncompleted:
-            print(i)
-            all_tasks[i[0]] = i[1]
-            #b_str = "".join(i)
-            #uncomp_tasks.append(i)
-            
-        print(all_tasks)
-            
-            
-        bot.send_message(message.chat.id, make_str(uncomp_tasks))
+        bot.send_message(message.chat.id, make_str(not_done_list))
 #____________________________________________________________________________________________________
 #               НОВАЯ ЗАДАЧА
     elif message.text == 'New task':
@@ -97,11 +94,10 @@ def user(message):
 #____________________________________________________________________________________________________
 #               НОВАЯ НЕ ВЫПОЛНЕННАЯ ЗАДАЧА
     elif message.text == 'Add done task':
-
         mesg = bot.send_message(message.chat.id,'Введите ваше дело:')
         bot.register_next_step_handler(mesg, user_input_2)
 #____________________________________________________________________________________________________
-#               УДАЛЕНИЕ ЗАДАЧ
+#               УДАЛЕНИЕ ЗАДАЧ - ПОКА НЕ РАБОТАЕТ
     elif message.text == 'Delete all tasks':
         f1 = open('my_list_2.txt', 'w')
         f1.close()
@@ -119,41 +115,25 @@ def user_input(message):
         comm.commit()
         bot.send_message(message.chat.id,'Добавлено!')
     elif chek_dict[a] and chek_dict[a] == 'не выполненно':
-        bot.send_message(message.chat.id,'Ваше дело уже есть в списке')
+        bot.send_message(message.chat.id,'Ваше дело уже есть в списке не выполненных дел')
 
 def user_input_2(message):
     comm = sqlite3.connect('bd_bot_v2.sqlite3')
     cursor = comm.cursor()
     a = message.text
     chek_dict = chek_name_status()
-    if  chek_dict[a] and chek_dict[a] == 'не выполненно':
-        request = f'UPDATE tasks SET status = "выполненно" WHERE name = "{a}"'
+    if  a not in chek_dict:
+        request = f'INSERT INTO tasks(name, status) VALUES ("{a}", "выполненно")'
         cursor.execute(request)
         comm.commit()
         bot.send_message(message.chat.id,'Добавлено!')
-    elif chek_dict[a] and chek_dict[a] == 'не выполненно':
-        bot.send_message(message.chat.id,'Ваше дело уже есть в списке')
-
-# def user_input_2(message):
-#     comm = sqlite3.connect('bd_bot_v2.sqlite3')
-#     cursor = comm.cursor()
-#     delo = message.text
-#     q = cursor.execute('SELECT name FROM tasks')
-#     w = []
-#     for i in q:
-#         e = ''.join(i)
-#         w.append(e)
-#     request = f'INSERT INTO tasks(name, status) VALUES ("{delo}","выполненно" )'
-#     cursor.execute(request)
-#     comm.commit()
-
-#     bot.send_message(message.chat.id,'Добавлено!')
-
-# sql_update_query = """Update sqlitedb_developers set salary = 10000 where id = 4"""
-        # cursor.execute(sql_update_query)
-        # sqlite_connection.commit()
-        # print("Запись успешно обновлена")
-        # cursor.close()
+    elif chek_dict[a] and chek_dict[a] == 'выполненно':
+        bot.send_message(message.chat.id,'Вы уже это сделали сегодня!')
+    else:
+        request = f'INSERT INTO tasks(name, status) VALUES ("{a}", "выполненно")'
+        cursor.execute(request)
+        comm.commit()
+        bot.send_message(message.chat.id,'Добавлено!')
 #_______________________________________________________________________________________
 
 @bot.message_handler(content_types=all_content_types)
