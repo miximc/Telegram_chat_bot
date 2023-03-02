@@ -92,7 +92,7 @@ def user(message):
         mesg = bot.send_message(message.chat.id,'Введите ваше дело:')
         bot.register_next_step_handler(mesg, user_input)
 #____________________________________________________________________________________________________
-#               НОВАЯ НЕ ВЫПОЛНЕННАЯ ЗАДАЧА
+#               НОВАЯ ВЫПОЛНЕННАЯ ЗАДАЧА
     elif message.text == 'Add done task':
         mesg = bot.send_message(message.chat.id,'Введите ваше дело:')
         bot.register_next_step_handler(mesg, user_input_2)
@@ -132,13 +132,13 @@ def user_input_2(message):
     elif chek_dict[a] and chek_dict[a] == 'выполненно':
         bot.send_message(message.chat.id,'Вы уже это сделали сегодня!')
     else:
-        request = f'INSERT INTO tasks(name, status) VALUES ("{a}", "выполненно")'
+        request = f'UPDATE tasks set status="выполненно" where name = "{a}"'
         cursor.execute(request)
         comm.commit()
         cursor.close()
         bot.send_message(message.chat.id,'Добавлено!')
 #_______________________________________________________________________________________
-
+#Update sqlitedb_developers set salary = 10000 where id = 4"""
 @bot.message_handler(content_types=all_content_types)
 def audio_user(message):
     if message.content_type == 'voice':
